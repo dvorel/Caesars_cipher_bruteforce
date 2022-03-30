@@ -45,11 +45,6 @@ class Caesar():
                         
         return decWord
     
-    
-def inDict(word, dict):
-    if word in dict:
-        return True
-    return False
 
 def checkWord(w1, d1, w2, d2):
     global caesarKeys, encrypted, printing, dicts
@@ -69,8 +64,8 @@ def checkWord(w1, d1, w2, d2):
         if word in (w1+w2) and len(word)>3:
             d = caesar.decrypt(word)
             
-            if not inDict(d, dicts):                   
-                #append to lists
+            if not d in dicts:                   
+                del caesar
                 return
     
     if w1 in caesarKeys.keys():
@@ -85,13 +80,19 @@ def checkWord(w1, d1, w2, d2):
     
     caesarKeys[key] = val
     
-    while printing:
-        pass
+    del key
+    del val
+    del caesar
+    #print("VAL: ", val)
     
-    printing = True
-    print("\nWORD: ", d)
-    print("DICT: ", caesar.dict)
-    printing = False
+    # while printing:
+    #     pass
+    
+    # printing = True
+    # print("\nW: ", w1, " | ", w2)
+    # print("Key: ", key)
+    # print("Val: ", val)
+    # printing = False
     
     
 
@@ -121,7 +122,6 @@ if __name__ == "__main__":
     
     
     n = 0
-    key = 0
     
     #iterate
     while n < len(encrypted):
@@ -132,22 +132,37 @@ if __name__ == "__main__":
         word = encrypted[n]
         n+=1
         
+        usedKeys = caesarKeys.copy()
+        
         #find all new words in dict
         dictWords = []
         for d in dict:
             if len(word) == len(d):
                 dictWords.append(d)
         
-        for k, v in caesarKeys.items():
+        for k, v in usedKeys.items():
+            print(f"N:{n} | K:{k} | V:{v}")
             for d in dictWords:
+                
+                if len(threads) > 30000:
+                    print("MAX THREADS!")
+                    for t in range(len(threads)):
+                        threads[t].join()
+                    threads = []
+                    print("ALL THREADS FINISHED!")
+                        
                 #decrypt word
                 threads.append(threading.Thread(target=checkWord, args=(k, v, word, d)))
                 threads[-1].start()
         
-                  
+        
+        del usedKeys
+        del dictWords
+        
         for thr in threads:
             thr.join()
         
-        print("Iter: ", n)
-        for k, y in caesarKeys.items():
+        print("Iter: ", n)        
+        for k, v in caesarKeys.items():
             print(f"Key:{k} | Val:{v}")
+        print("LEN: ", len(caesarKeys))
